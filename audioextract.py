@@ -166,19 +166,19 @@ class MyWindow(Gtk.Window):
             foldergrid.add(label) 
             
             arefiles = 1
+            l = 0
             for file in os.listdir(jenga):
                 if file.endswith(".mp4"):
                     l = Gtk.Label(file)
                     l.set_alignment(0, .5)
                     foldergrid.add(l)
                     l.show()
-                else:
-                    l = Gtk.Label("Oops, no videos in here")
-                    l.set_alignment(0, .5)
-                    foldergrid.add(l)
-                    l.show()
-                    arefiles = 0
-                    break
+            if l == 0:
+                l = Gtk.Label("Oops, no .mp4 videos in here")
+                l.set_alignment(0, .5)
+                foldergrid.add(l)
+                l.show()
+                arefiles = 0
 
             if arefiles == 1:
                 button.set_sensitive(True)
