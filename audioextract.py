@@ -211,7 +211,8 @@ class MyWindow(Gtk.Window):
                     
                 self.timeout_id = GObject.timeout_add(50, self.on_timeout, None)
             else:
-                print ("Hello World")
+                # Error handling
+                print("This is bad...")
         else:
             # Error handling
             print("This is bad...")
