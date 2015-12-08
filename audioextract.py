@@ -8,18 +8,19 @@ import threading
 import ntpath
 
 # Function to extract the audio from all the files of a folder which is passed as parameter
-def extractfromFolder(folder):
-    for file in os.listdir(folder):
+def extractfromFolder(origin, destination):
+    for file in os.listdir(origin):
         if file.endswith(".mp4"):
             vid = file[:-4]
             # Execute avconv -i file -acodec mp3 -vn file.mp3
-            call(["avconv", "-i", folder+"/"+file, "-y", "-acodec", "mp3", "-vn", vid+".mp3"])
+            call(["avconv", "-i", origin+"/"+file, "-y", "-acodec", "mp3", "-vn", destination+"/"+vid+".mp3"])
 
 # Function to extract the audio from a specific file passed as parameter
-def extractfromFile(video):
+def extractfromFile(video, destination):
     vid = video[:-4]
+    filename = ntpath.basename(vid)
     # Execute avconv -i file -acodec mp3 -vn file.mp3
-    call(["avconv", "-i", video, "-y", "-acodec", "mp3", "-vn", vid+".mp3"])
+    call(["avconv", "-i", video, "-y", "-acodec", "mp3", "-vn", destination+"/"+filename+".mp3"])
 
 # Main window class
 class MyWindow(Gtk.Window):
@@ -36,6 +37,7 @@ class MyWindow(Gtk.Window):
     filegrid = 0
     foldergrid = 0
     vbox = 0
+    dest = 0
 
     # Function which initializes the gtk window and all the widgets
     def __init__(self):
@@ -75,6 +77,12 @@ class MyWindow(Gtk.Window):
             Gtk.FileChooserAction.OPEN,
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+        savefolder = Gtk.FileChooserDialog("Please choose a destination folder", self,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             "Select", Gtk.ResponseType.OK))
+        savefolder.set_default_size(800, 400)
+
         global f
         global foldergrid
         global filegrid
@@ -112,12 +120,34 @@ class MyWindow(Gtk.Window):
             l.show()
             filegrid.show()
 
+            response = savefolder.run()
+            if response == Gtk.ResponseType.OK:
+                global dest
+                dest = savefolder.get_filename()
+                label = Gtk.Label()
+                label.set_markup("<b>Outputted to: </b>")
+                l = Gtk.Label(dest)
+                filegrid.add(label)
+                filegrid.add(l)
+                label.set_alignment(0, .5)
+                l.set_alignment(0, .5)
+                label.show()
+                l.show()
+            elif response == Gtk.ResponseType.CANCEL:
+                filegrid.destroy()
+                button.set_sensitive(False)
+                print("Cancel clicked")
+
+            savefolder.destroy()
+
             button.set_sensitive(True)
             print("File selected: " + jenga)
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
 
         dialog.destroy()
+
+        
 
     # Function to set the kind of files which are going to be selected in on_file_clicked
     def add_filters(self, dialog):
@@ -138,6 +168,12 @@ class MyWindow(Gtk.Window):
             (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
              "Select", Gtk.ResponseType.OK))
         dialog.set_default_size(800, 400)
+
+        savefolder = Gtk.FileChooserDialog("Please choose a destination folder", self,
+            Gtk.FileChooserAction.SELECT_FOLDER,
+            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+             "Select", Gtk.ResponseType.OK))
+        savefolder.set_default_size(800, 400)
 
         global f
         global foldergrid
@@ -185,6 +221,25 @@ class MyWindow(Gtk.Window):
             label.show()
             foldergrid.show()
 
+            response = savefolder.run()
+            if response == Gtk.ResponseType.OK:
+                global dest
+                dest = savefolder.get_filename()
+                label = Gtk.Label()
+                label.set_markup("<b>Outputted to: </b>")
+                l = Gtk.Label(dest)
+                foldergrid.add(label)
+                foldergrid.add(l)
+                label.set_alignment(0, .5)
+                l.set_alignment(0, .5)
+                label.show()
+                l.show()
+                
+            elif response == Gtk.ResponseType.CANCEL:
+                print("Cancel clicked")
+                button.set_sensitive(False)
+                foldergrid.destroy()
+            savefolder.destroy()
 
             print("Folder selected: " + jenga)
         elif response == Gtk.ResponseType.CANCEL:
@@ -197,16 +252,17 @@ class MyWindow(Gtk.Window):
         global jenga
         global t1
         global f
+        global dest
         self.progressbar.set_fraction(0)
         self.progressbar.set_text(None)
         if jenga:
             if f == 0:
-                t1 = threading.Thread(target=extractfromFile, args=(jenga,))
+                t1 = threading.Thread(target=extractfromFile, args=(jenga, dest,))
                 t1.start()
                     
                 self.timeout_id = GObject.timeout_add(50, self.on_timeout, None)
             elif f == 1:
-                t1 = threading.Thread(target=extractfromFolder, args=(jenga,))
+                t1 = threading.Thread(target=extractfromFolder, args=(jenga, dest,))
                 t1.start()
                     
                 self.timeout_id = GObject.timeout_add(50, self.on_timeout, None)
