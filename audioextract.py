@@ -12,15 +12,17 @@ def extractfromFolder(origin, destination):
     for file in os.listdir(origin):
         if file.endswith(".mp4"):
             vid = file[:-4]
-            # Execute avconv -i file -acodec mp3 -vn file.mp3
-            call(["avconv", "-i", origin+"/"+file, "-y", "-acodec", "mp3", "-vn", destination+"/"+vid+".mp3"])
+            # Execute ffmpeg -i file -f mp3 -vn -write_xing 0 file.mp3
+            call(["./bin/x86_64/ffmpeg", "-i", origin+"/"+file, "-f", "mp3", "-vn", "-write_xing", "0", destination+"/"+vid+".mp3"])
 
 # Function to extract the audio from a specific file passed as parameter
 def extractfromFile(video, destination):
     vid = video[:-4]
     filename = ntpath.basename(vid)
     # Execute avconv -i file -acodec mp3 -vn file.mp3
-    call(["avconv", "-i", video, "-y", "-acodec", "mp3", "-vn", destination+"/"+filename+".mp3"])
+    #call(["avconv", "-i", video, "-y", "-acodec", "mp3", "-vn", destination+"/"+filename+".mp3"])
+    # Execute ffmpeg -i file -f mp3 -vn -write_xing 0 file.mp3
+    call(["./bin/x86_64/ffmpeg", "-i", video, "-f", "mp3", "-vn", "-write_xing", "0", destination+"/"+filename+".mp3"])
 
 # Main window class
 class MyWindow(Gtk.Window):
