@@ -10,10 +10,13 @@ import ntpath
 # Function to extract the audio from all the files of a folder which is passed as parameter
 def extractfromFolder(origin, destination):
     for file in os.listdir(origin):
-        if file.endswith(".mp4"):
-            vid = file[:-4]
+        if file.endswith(".mp4") or file.endswith(".webm"):
+            if file.endswith(".webm"):
+                vid = file[:-5]
+            else:
+                vid = file[:-4]
             # Execute ffmpeg -i file -f mp3 -vn -write_xing 0 file.mp3
-            call(["./bin/x86_64/ffmpeg", "-i", origin+"/"+file, "-f", "mp3", "-aq", "0", "-vn", "-write_xing", "0", destination+"/"+vid+".mp3"])
+            call(["./bin/x86_64/ffmpeg", "-i", origin+"/"+file, "-f", "mp3", "-vn", "-write_xing", "0", destination+"/"+vid+".mp3"])
 
 # Function to extract the audio from a specific file passed as parameter
 def extractfromFile(video, destination):
@@ -22,7 +25,8 @@ def extractfromFile(video, destination):
     # Execute avconv -i file -acodec mp3 -vn file.mp3
     #call(["avconv", "-i", video, "-y", "-acodec", "mp3", "-vn", destination+"/"+filename+".mp3"])
     # Execute ffmpeg -i file -f mp3 -vn -write_xing 0 file.mp3
-    call(["./bin/x86_64/ffmpeg", "-i", video, "-f", "mp3", "-aq", "0", "-vn", "-write_xing", "0", destination+"/"+filename+".mp3"])
+    #call(["./bin/x86_64/ffmpeg", "-i", video, "-f", "mp3", "-aq", "0", "-vn", "-write_xing", "0", destination+"/"+filename+".mp3"])
+    call(["./bin/x86_64/ffmpeg", "-i", video, "-f", "mp3", "-vn", "-write_xing", "0", destination+"/"+filename+".mp3"])
 
 # Main window class
 class MyWindow(Gtk.Window):
@@ -45,7 +49,7 @@ class MyWindow(Gtk.Window):
     def __init__(self):
         global f
         global vbox
- 
+
         f = 0
         label = 0
         Gtk.Window.__init__(self, title="Extractipy")
@@ -104,7 +108,7 @@ class MyWindow(Gtk.Window):
             global jenga
             global button
             global vbox
-            
+
             jenga = dialog.get_filename()
             filename = ntpath.basename(jenga)
             path = jenga[:-len(filename)]
@@ -149,7 +153,7 @@ class MyWindow(Gtk.Window):
 
         dialog.destroy()
 
-        
+
 
     # Function to set the kind of files which are going to be selected in on_file_clicked
     def add_filters(self, dialog):
@@ -162,7 +166,7 @@ class MyWindow(Gtk.Window):
         filter_any.set_name("Any files")
         filter_any.add_pattern("*")
         dialog.add_filter(filter_any)
-    
+
     # Function to select a folder
     def on_folder_clicked(self, widget):
         dialog = Gtk.FileChooserDialog("Please choose a folder", self,
@@ -201,12 +205,12 @@ class MyWindow(Gtk.Window):
             label = Gtk.Label()
             label.set_markup("<b>Files selected in " + jenga + ":</b>")
             label.set_alignment(0, .5)
-            foldergrid.add(label) 
-            
+            foldergrid.add(label)
+
             arefiles = 1
             l = 0
             for file in os.listdir(jenga):
-                if file.endswith(".mp4"):
+                if file.endswith(".mp4") or file.endswith(".webm"):
                     l = Gtk.Label(file)
                     l.set_alignment(0, .5)
                     foldergrid.add(l)
@@ -236,7 +240,7 @@ class MyWindow(Gtk.Window):
                 l.set_alignment(0, .5)
                 label.show()
                 l.show()
-                
+
             elif response == Gtk.ResponseType.CANCEL:
                 print("Cancel clicked")
                 button.set_sensitive(False)
@@ -261,12 +265,12 @@ class MyWindow(Gtk.Window):
             if f == 0:
                 t1 = threading.Thread(target=extractfromFile, args=(jenga, dest,))
                 t1.start()
-                    
+
                 self.timeout_id = GObject.timeout_add(50, self.on_timeout, None)
             elif f == 1:
                 t1 = threading.Thread(target=extractfromFolder, args=(jenga, dest,))
                 t1.start()
-                    
+
                 self.timeout_id = GObject.timeout_add(50, self.on_timeout, None)
             else:
                 # Error handling
@@ -282,7 +286,7 @@ class MyWindow(Gtk.Window):
         global t1
         global f
         button.set_sensitive(False)
-        
+
         if t1.isAlive():
             self.progressbar.set_show_text(False)
             self.progressbar.pulse()
